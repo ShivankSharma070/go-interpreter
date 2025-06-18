@@ -11,8 +11,17 @@ const (
 	INT  = "INT"
 
 	// Operators
-	EQUAL = "="
-	PLUS  = "+"
+	ASSIGN  = "="
+	PLUS    = "+"
+	ASTERIK = "*"
+	MINUS   = "-"
+	BANG    = "!"
+	SLASH   = "/"
+	GT      = ">"
+	LT      = "<"
+
+	EQ     = "=="
+	NOT_EQ = "!="
 
 	//Delimeters
 	SEMICOLON = ";"
@@ -20,13 +29,18 @@ const (
 
 	// Braces
 	LPAREN = "("
-	LBRACE = "{"
 	RPAREN = ")"
+	LBRACE = "{"
 	RBRACE = "}"
 
 	// Keywords
 	FUNCTION = "FUNCTION"
 	LET      = "LET"
+	TRUE     = "TRUE"
+	FALSE    = "FALSE"
+	IF       = "IF"
+	ELSE     = "ELSE"
+	RETURN   = "RETURN"
 )
 
 type Token struct {
@@ -35,8 +49,13 @@ type Token struct {
 }
 
 var keyword = map[string]TokenType{
-	"fn":  FUNCTION,
-	"let": LET,
+	"fn":     FUNCTION,
+	"let":    LET,
+	"true":   TRUE,
+	"false":  FALSE,
+	"if":     IF,
+	"else":   ELSE,
+	"return": RETURN,
 }
 
 func LookUpIden(iden string) TokenType {
