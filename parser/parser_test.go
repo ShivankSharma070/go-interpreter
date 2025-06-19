@@ -7,11 +7,45 @@ import (
 	"github.com/ShivankSharma070/go-interpreter/lexer"
 )
 
-func TestParser(t *testing.T) {
+func TestReturnParser(t *testing.T) {
 	input := `
-	let x 5;
-	let  = 10;
-	let  100;
+	return 1234;
+	return myvar;
+	return 5;
+	`
+
+	l := lexer.New(input)
+	p := New(l)
+
+	program := p.ParseProgram()
+
+	if program == nil {
+		t.Error("ParseProgram returned nil")
+		return
+	}
+
+	if len(program.Statements) != 3 {
+		t.Errorf("Program does not container 3 statements. It contains %d", len(program.Statements))
+		return
+	}
+
+	for _, stmt := range program.Statements {
+		returnStmt, ok := stmt.(*ast.ReturnStatement)
+		if !ok {
+			t.Errorf("stmt is not *ast.ReturnStatement, got %T", stmt)
+		}
+
+		if returnStmt.TokenLiteral() != "return" {
+			t.Errorf("TokenLiteral() is not 'return', got %s", returnStmt.TokenLiteral())
+		}
+	}
+}
+
+func TestLetParser(t *testing.T) {
+	input := `
+	let x = 5;
+	let y  = 10;
+	let foo =  100;
 	`
 
 	lex := lexer.New(input)
