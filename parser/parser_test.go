@@ -76,6 +76,37 @@ func TestIdentifierExpression(t *testing.T) {
 	}
 }
 
+func TestIntegerLiteralExpression(t *testing.T) {
+	input := `5;`
+
+	l := lexer.New(input)
+	p := New(l)
+	checkForParserErrors(t, p)
+
+	program := p.ParseProgram()
+	if len(program.Statements) != 1 {
+		t.Fatalf("program.Statements does not have enough statements, got %d", len(program.Statements))
+	}
+
+	expStmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("statement is not ast.ExpressionStatement, got %T", program.Statements[0])
+	}
+
+	literal, ok := expStmt.Expression.(*ast.IntegerLiteral)
+	if !ok {
+		t.Fatalf("expStmt.Expression is not ast.IntegerLiteral, got %T", expStmt.Expression)
+	}
+
+	if literal.TokenLiteral() != "5" {
+		t.Fatalf("literal.Tokenliteral is not equal to %s, got %s", "5", literal.TokenLiteral())
+	}
+
+	if literal.Value != 5 {
+		t.Fatalf("literal.value is not equal to %d, got %d", 5, literal.Value)
+	}
+}
+
 func TestLetParser(t *testing.T) {
 	input := `
 	let x = 5;

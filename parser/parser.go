@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/ShivankSharma070/go-interpreter/ast"
 	"github.com/ShivankSharma070/go-interpreter/lexer"
@@ -42,8 +43,10 @@ func (p *Parser) Errors() []string {
 
 func New(l *lexer.Lexer) *Parser {
 	p := &Parser{l: l, errors: []string{}}
+	p.prefixParserMap = map[token.TokenType]prefixParserFunc{}
+	p.registerPrefix(token.IDEN, p.parseIdentifier)
+	p.registerPrefix(token.INT, p.parseIntegerLiteral)
 
-	p.prefixParserMap = map[token.TokenType]prefixParserFunc{token.IDEN: p.parseIdentifier}
 	// Read Two tokens so that currentToken and peekToken are set
 	p.nextToken()
 	p.nextToken()
@@ -141,6 +144,19 @@ func (p *Parser) parseIdentifier() ast.Expression {
 	return &ast.Identifier{Token: p.currentToken, Value: p.currentToken.Literal}
 }
 
+func (p *Parser) parseIntegerLiteral() ast.Expression {
+	lit := &ast.IntegerLiteral{Token: p.currentToken}
+
+	value, err := strconv.ParseInt(lit.TokenLiteral(), 0, 64)
+	if err != nil {
+		err := fmt.Sprintf("Could not parse %q as integer", lit.TokenLiteral())
+		p.errors = append(p.errors, err)
+	}
+
+	lit.Value = value
+	return lit
+}
+
 // expectPeek function reads next token only if the next token is what we expect
 func (p *Parser) expectPeek(t token.TokenType) bool {
 	if p.isPeekToken(t) {
@@ -165,11 +181,11 @@ func (p *Parser) peekError(t token.TokenType) {
 }
 
 // Helper function to asscoiate parser fucntion for a token in prefix position
-func (p *Parser) registerPrefix(token token.Token, fn prefixParserFunc) {
-	p.prefixParserMap[token.Type] = fn
+func (p *Parser) registerPrefix(tokentype token.TokenType, fn prefixParserFunc) {
+	p.prefixParserMap[tokentype] = fn
 }
 
 // Helper function to asscoiate parser fucntion for a token in prefix position
-func (p *Parser) registerInfix(token token.Token, fn prefixParserFunc) {
-	p.prefixParserMap[token.Type] = fn
+func (p *Parser) registerInfix(tokentype token.TokenType, fn prefixParserFunc) {
+	p.prefixParserMap[tokentype] = fn
 }
