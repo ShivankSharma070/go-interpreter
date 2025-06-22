@@ -41,6 +41,41 @@ func TestReturnParser(t *testing.T) {
 	}
 }
 
+func TestIdentifierExpression(t *testing.T) {
+	input := `foobar;`
+
+	l := lexer.New(input)
+	p := New(l)
+
+	prog := p.ParseProgram()
+	checkForParserErrors(t, p)
+
+	if len(prog.Statements) != 1 {
+		t.Fatalf("Now enough statement in program, got %d", len(prog.Statements))
+	}
+
+	for _, stmt := range prog.Statements {
+
+		expStmt, ok := stmt.(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf("Statement is not of *ast.ExpressionStatement, got %T", stmt)
+		}
+
+		idenStmt, ok := expStmt.Expression.(*ast.Identifier)
+		if !ok {
+			t.Fatalf("expStmt.Expression is not of *ast.Identifier, got %T", stmt)
+		}
+
+		if idenStmt.Value != "foobar" {
+			t.Fatalf("idenStmt.value is not equal to %s, got %s", "foobar", idenStmt.Value)
+		}
+
+		if idenStmt.TokenLiteral() != "foobar" {
+			t.Fatalf("idenStmt.tokenLiteral() is not equal to %s, got %s", "foobar", idenStmt.TokenLiteral())
+		}
+	}
+}
+
 func TestLetParser(t *testing.T) {
 	input := `
 	let x = 5;

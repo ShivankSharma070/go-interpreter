@@ -8,12 +8,33 @@ import (
 	"github.com/ShivankSharma070/go-interpreter/token"
 )
 
+// Constants for deciding precedence of operators with parsing them as expression
+const (
+	_ = iota
+	LOWEST
+	EQUALS      // ==
+	LESSGREATER // > or <
+	SUM         // +
+	PRODUCT     // *
+	PREFIX      // -X or !X
+	CALL        // myfunction(x)
+)
+
 type Parser struct {
 	l            *lexer.Lexer
 	currentToken token.Token
 	peekToken    token.Token
 	errors       []string
+
+	// Maps to associate a token with a parser function
+	prefixParserMap map[token.TokenType]prefixParserFunc
+	infixParserMap  map[token.TokenType]infixParserFunc
 }
+
+type (
+	prefixParserFunc func() ast.Expression               // For token found in prefix position
+	infixParserFunc  func(ast.Expression) ast.Expression // For token found in infix position
+)
 
 func (p *Parser) Errors() []string {
 	return p.errors
@@ -22,6 +43,7 @@ func (p *Parser) Errors() []string {
 func New(l *lexer.Lexer) *Parser {
 	p := &Parser{l: l, errors: []string{}}
 
+	p.prefixParserMap = map[token.TokenType]prefixParserFunc{token.IDEN: p.parseIdentifier}
 	// Read Two tokens so that currentToken and peekToken are set
 	p.nextToken()
 	p.nextToken()
@@ -57,7 +79,7 @@ func (p *Parser) parseStatement() ast.Statement {
 	case token.RETURN:
 		return p.parseReturnStatement()
 	default:
-		return nil
+		return p.parseExpressionStatement()
 	}
 }
 
@@ -92,6 +114,32 @@ func (p *Parser) parseLetStatement() ast.Statement {
 	}
 	return stmt
 }
+func (p *Parser) parseExpressionStatement() ast.Statement {
+	stmt := &ast.ExpressionStatement{Token: p.currentToken}
+
+	stmt.Expression = p.parseExpression(LOWEST)
+
+	if p.isPeekToken(token.SEMICOLON) {
+		p.nextToken()
+	}
+
+	return stmt
+}
+
+func (p *Parser) parseExpression(precedence int) ast.Expression {
+	prefix := p.prefixParserMap[p.currentToken.Type]
+	if prefix == nil {
+		return nil
+	}
+
+	leftExp := prefix()
+
+	return leftExp
+}
+
+func (p *Parser) parseIdentifier() ast.Expression {
+	return &ast.Identifier{Token: p.currentToken, Value: p.currentToken.Literal}
+}
 
 // expectPeek function reads next token only if the next token is what we expect
 func (p *Parser) expectPeek(t token.TokenType) bool {
@@ -105,15 +153,23 @@ func (p *Parser) expectPeek(t token.TokenType) bool {
 
 func (p *Parser) isCurToken(t token.TokenType) bool {
 	return p.currentToken.Type == t
-
 }
 
 func (p *Parser) isPeekToken(t token.TokenType) bool {
 	return p.peekToken.Type == t
-
 }
 
 func (p *Parser) peekError(t token.TokenType) {
 	err := fmt.Sprintf("Expected next token to be %s , got %s", t, p.peekToken.Type)
 	p.errors = append(p.errors, err)
+}
+
+// Helper function to asscoiate parser fucntion for a token in prefix position
+func (p *Parser) registerPrefix(token token.Token, fn prefixParserFunc) {
+	p.prefixParserMap[token.Type] = fn
+}
+
+// Helper function to asscoiate parser fucntion for a token in prefix position
+func (p *Parser) registerInfix(token token.Token, fn prefixParserFunc) {
+	p.prefixParserMap[token.Type] = fn
 }
