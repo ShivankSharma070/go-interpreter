@@ -46,6 +46,8 @@ func New(l *lexer.Lexer) *Parser {
 	p.prefixParserMap = map[token.TokenType]prefixParserFunc{}
 	p.registerPrefix(token.IDEN, p.parseIdentifier)
 	p.registerPrefix(token.INT, p.parseIntegerLiteral)
+	p.registerPrefix(token.MINUS, p.parsePrefixExpression)
+	p.registerPrefix(token.BANG, p.parsePrefixExpression)
 
 	// Read Two tokens so that currentToken and peekToken are set
 	p.nextToken()
@@ -117,6 +119,7 @@ func (p *Parser) parseLetStatement() ast.Statement {
 	}
 	return stmt
 }
+
 func (p *Parser) parseExpressionStatement() ast.Statement {
 	stmt := &ast.ExpressionStatement{Token: p.currentToken}
 
@@ -132,6 +135,7 @@ func (p *Parser) parseExpressionStatement() ast.Statement {
 func (p *Parser) parseExpression(precedence int) ast.Expression {
 	prefix := p.prefixParserMap[p.currentToken.Type]
 	if prefix == nil {
+		p.errors = append(p.errors, fmt.Sprint("No prefix parsing function found."))
 		return nil
 	}
 
@@ -139,6 +143,8 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 
 	return leftExp
 }
+
+// ===================================================================
 
 func (p *Parser) parseIdentifier() ast.Expression {
 	return &ast.Identifier{Token: p.currentToken, Value: p.currentToken.Literal}
@@ -155,6 +161,19 @@ func (p *Parser) parseIntegerLiteral() ast.Expression {
 
 	lit.Value = value
 	return lit
+}
+
+func (p *Parser) parsePrefixExpression() ast.Expression {
+	exp := &ast.PrefixExpression{
+		Token:    p.currentToken,
+		Operator: p.currentToken.Literal,
+	}
+
+	p.nextToken()
+
+	exp.Right = p.parseExpression(PREFIX)
+
+	return exp
 }
 
 // expectPeek function reads next token only if the next token is what we expect
