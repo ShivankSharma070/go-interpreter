@@ -97,20 +97,8 @@ func TestIntegerLiteralExpression(t *testing.T) {
 	if !testIntegerLiteral(t, expStmt.Expression, 5) {
 		return
 	}
-
-	// literal, ok := expStmt.Expression.(*ast.IntegerLiteral)
-	// if !ok {
-	// 	t.Fatalf("expStmt.Expression is not ast.IntegerLiteral, got %T", expStmt.Expression)
-	// }
-	//
-	// if literal.TokenLiteral() != "5" {
-	// 	t.Fatalf("literal.Tokenliteral is not equal to %s, got %s", "5", literal.TokenLiteral())
-	// }
-	//
-	// if literal.Value != 5 {
-	// 	t.Fatalf("literal.value is not equal to %d, got %d", 5, literal.Value)
-	// }
 }
+
 func TestPrefixExpressionParsing(t *testing.T) {
 	tests := []struct {
 		input        string
@@ -151,6 +139,57 @@ func TestPrefixExpressionParsing(t *testing.T) {
 		}
 	}
 
+}
+
+func TestInfixExpressionParsing(t *testing.T) {
+	tests := []struct {
+		input    string
+		left     int64
+		operator string
+		right    int64
+	}{
+		{"5+5", 5, "+", 5},
+		{"5-5", 5, "-", 5},
+		{"5*5", 5, "*", 5},
+		{"5/5", 5, "/", 5},
+		{"5>5", 5, ">", 5},
+		{"5<5", 5, "<", 5},
+		{"5==5", 5, "==", 5},
+		{"5!=5", 5, "!=", 5},
+	}
+
+	for _, tt := range tests {
+		l := lexer.New(tt.input)
+		p := New(l)
+
+		prog := p.ParseProgram()
+		checkForParserErrors(t, p)
+		if len(prog.Statements) != 1 {
+			t.Fatalf("prog.Statements does not contain %d, got %d", 1, len(prog.Statements))
+		}
+
+		exp, ok := prog.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf("prog.Statements is not ast.ExpressionStatement, got %T", prog.Statements[0])
+		}
+
+		infixExp, ok := exp.Expression.(*ast.InfixExpression)
+		if !ok {
+			t.Fatalf("prog.Statements is not ast.ExpressionStatement, got %T", prog.Statements[0])
+		}
+
+		if !testIntegerLiteral(t, infixExp.Left, tt.left) {
+			t.Fatalf("infix.Left is not %d, got %s", 5, infixExp.Left.String())
+		}
+
+		if infixExp.Operator != tt.operator {
+			t.Fatalf("infixExp.Operator is not %s, got %s", tt.operator, infixExp.Operator)
+		}
+
+		if !testIntegerLiteral(t, infixExp.Right, tt.right) {
+			t.Fatalf("infix.Right is not %d, got %s", 5, infixExp.Right.String())
+		}
+	}
 }
 
 func TestLetParser(t *testing.T) {
