@@ -243,6 +243,37 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 	}
 }
 
+func TestBoolExpressionParsing(t *testing.T) {
+	input := `false;`
+	l := lexer.New(input)
+	p := New(l)
+
+	program := p.ParseProgram()
+	checkForParserErrors(t, p)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf("Program.Statements does not contains %d statements, got %d", 1, len(program.Statements))
+	}
+
+	exp, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("Program.Statement[0] is not ast.ExpressionStatemnet, got %T", program.Statements[0])
+	}
+
+	boolExp, ok := exp.Expression.(*ast.BoolExpression)
+	if !ok {
+		t.Fatalf("exp.Expression is not ast.BoolExpression, got %T", exp.Expression)
+	}
+
+	if boolExp.String() != "false" {
+		t.Fatalf("boolExp.String() does not return %s, got %s", "false", boolExp.String())
+	}
+
+	if boolExp.Value != false {
+		t.Fatalf("boolExp.Value is not %t, got %t", false, boolExp.Value)
+	}
+}
+
 func TestLetParser(t *testing.T) {
 	input := `
 	let x = 5;
@@ -333,7 +364,7 @@ func testLiteralExpression(t *testing.T, exp ast.Expression, value any) bool {
 	return false
 }
 
-func testInfixExpression(t *testing.T, exp ast.Expression, left interface{}, operator string, right interface{}) bool {
+func testInfixExpression(t *testing.T, exp ast.Expression, left any, operator string, right any) bool {
 	infixExp, ok := exp.(*ast.InfixExpression)
 	if !ok {
 		t.Fatalf("prog.Statements is not ast.ExpressionStatement, got %T", exp)

@@ -176,3 +176,12 @@ func (ie *InfixExpression) String() string {
 	buf.WriteString(")")
 	return buf.String()
 }
+
+type BoolExpression struct {
+	Token token.Token
+	Value bool
+}
+
+func (be *BoolExpression) expressionNode()      {}
+func (be *BoolExpression) TokenLiteral() string { return be.Token.Literal }
+func (be *BoolExpression) String() string       { return be.Token.Literal }
