@@ -94,10 +94,12 @@ func TestPrefixExpressionParsing(t *testing.T) {
 	tests := []struct {
 		input        string
 		operator     string
-		integerValue int64
+		integerValue interface{}
 	}{
 		{"!5;", "!", 5},
 		{"-15;", "-", 15},
+		{"!true;", "!", true},
+		{"!false;", "!", false},
 	}
 
 	for _, tt := range tests {
@@ -135,9 +137,9 @@ func TestPrefixExpressionParsing(t *testing.T) {
 func TestInfixExpressionParsing(t *testing.T) {
 	tests := []struct {
 		input    string
-		left     int64
+		left     interface{}
 		operator string
-		right    int64
+		right    interface{}
 	}{
 		{"5+5", 5, "+", 5},
 		{"5-5", 5, "-", 5},
@@ -147,6 +149,9 @@ func TestInfixExpressionParsing(t *testing.T) {
 		{"5<5", 5, "<", 5},
 		{"5==5", 5, "==", 5},
 		{"5!=5", 5, "!=", 5},
+		{"true == true", true, "==", true},
+		{"true != false", true, "!=", false},
+		{"false == false", false, "==", false},
 	}
 
 	for _, tt := range tests {
@@ -227,7 +232,23 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 			"3 + 4 * 5 == 3 * 1 + 4 * 5",
 			"((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))",
 		},
-	}
+		{
+			"true",
+			"true",
+		},
+		{
+			"false",
+			"false",
+		},
+		{
+			"3 > 5 == false",
+			"((3 > 5) == false)",
+		},
+		{
+			"3 < 5 == true",
+			"((3 < 5) == true)",
+		}}
+
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
 		p := New(l)
@@ -260,17 +281,8 @@ func TestBoolExpressionParsing(t *testing.T) {
 		t.Fatalf("Program.Statement[0] is not ast.ExpressionStatemnet, got %T", program.Statements[0])
 	}
 
-	boolExp, ok := exp.Expression.(*ast.BoolExpression)
-	if !ok {
-		t.Fatalf("exp.Expression is not ast.BoolExpression, got %T", exp.Expression)
-	}
-
-	if boolExp.String() != "false" {
-		t.Fatalf("boolExp.String() does not return %s, got %s", "false", boolExp.String())
-	}
-
-	if boolExp.Value != false {
-		t.Fatalf("boolExp.Value is not %t, got %t", false, boolExp.Value)
+	if !testLiteralExpression(t, exp.Expression, false) {
+		t.FailNow()
 	}
 }
 
@@ -358,6 +370,8 @@ func testLiteralExpression(t *testing.T, exp ast.Expression, value any) bool {
 		return testIntegerLiteral(t, exp, v)
 	case string:
 		return testIdentifier(t, exp, v)
+	case bool:
+		return testBoolExpression(t, exp, v)
 	}
 
 	t.Fatalf("type of exp not handled, got %T", exp)
@@ -384,6 +398,25 @@ func testInfixExpression(t *testing.T, exp ast.Expression, left any, operator st
 		return false
 	}
 
+	return true
+}
+
+func testBoolExpression(t *testing.T, exp ast.Expression, value bool) bool {
+	boolExp, ok := exp.(*ast.BoolExpression)
+	if !ok {
+		t.Fatalf("exp.Expression is not ast.BoolExpression, got %T", exp)
+		return false
+	}
+
+	if boolExp.String() != fmt.Sprint(value) {
+		t.Fatalf("boolExp.String() does not return %s, got %s", fmt.Sprint(value), boolExp.String())
+		return false
+	}
+
+	if boolExp.Value != value {
+		t.Fatalf("boolExp.Value is not %t, got %t", value, boolExp.Value)
+		return false
+	}
 	return true
 }
 
