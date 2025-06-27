@@ -426,27 +426,59 @@ func TestFunctionStatementParsing(t *testing.T) {
 
 	exp, ok := stmt.Expression.(*ast.FunctionExpression)
 	if !ok {
-		t.Fatalf("stmt.Expression is not ast.Functionexpression, got %T", stmt.Expression )
+		t.Fatalf("stmt.Expression is not ast.Functionexpression, got %T", stmt.Expression)
 	}
 
-	if len(exp.Parameters)!= 2{
-		t.Fatalf("Function does not container %d prameters, got %d", 2,len(exp.Parameters))
+	if len(exp.Parameters) != 2 {
+		t.Fatalf("Function does not container %d prameters, got %d", 2, len(exp.Parameters))
 	}
 
-	if !testLiteralExpression(t,exp.Parameters[0] , "x")  {return }
-	if !testLiteralExpression(t, exp.Parameters[1] ,"y")  {return }
-	 
+	if !testLiteralExpression(t, exp.Parameters[0], "x") {
+		return
+	}
+	if !testLiteralExpression(t, exp.Parameters[1], "y") {
+		return
+	}
+
 	if len(exp.Body.Statements) != 1 {
-		t.Fatalf("exp.Body.Statements does not contain %d statement, got %d",1,len(exp.Body.Statements))
+		t.Fatalf("exp.Body.Statements does not contain %d statement, got %d", 1, len(exp.Body.Statements))
 	}
-	
+
 	bodyStmt, ok := exp.Body.Statements[0].(*ast.ExpressionStatement)
 	if !ok {
 		t.Fatalf("exp.Body.Statements[0] is not ast.ExpressionStatement, got %T", exp.Body.Statements[0])
 	}
 
 	if !testInfixExpression(t, bodyStmt.Expression, "x", "+", "y") {
-		return 
+		return
+	}
+}
+
+func TestFunctionParameters(t *testing.T) {
+	tests := []struct {
+		input          string
+		expectedParams []string
+	}{
+		{"fn(){}", []string{}},
+		{"fn(x){}", []string{"x"}},
+		{"fn(x,y){}", []string{"x", "y"}},
+	}
+
+	for _, tt := range tests {
+		l := lexer.New(tt.input)
+		p := New(l)
+		program := p.ParseProgram()
+		checkForParserErrors(t, p)
+
+		stmt := program.Statements[0].(*ast.ExpressionStatement)
+		functionStmt := stmt.Expression.(*ast.FunctionExpression)
+		if len(functionStmt.Parameters) != len(tt.expectedParams) {
+			t.Fatalf("length of parameters is wrong, got %d", len(functionStmt.Parameters))
+		}
+
+		for i, iden := range tt.expectedParams {
+			testLiteralExpression(t, functionStmt.Parameters[i],iden )
+		}
 	}
 }
 
