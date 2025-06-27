@@ -307,6 +307,105 @@ func TestBoolExpressionParsing(t *testing.T) {
 	}
 }
 
+func TestIfStatementParsing(t *testing.T) {
+	input := `if (x<y) {x};`
+
+	l := lexer.New(input)
+	p := New(l)
+
+	program := p.ParseProgram()
+	checkForParserErrors(t, p)
+	if len(program.Statements) != 1 {
+		t.Fatalf("program does not container %d statements, got %d", 1, len(program.Statements))
+	}
+
+	exp, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("program.Statement is not of type ast.ExpressionStatement, got %T", program.Statements[0])
+	}
+
+	ifExp, ok := exp.Expression.(*ast.IfElseExpression)
+	if !ok {
+		t.Fatalf("exp.Expression is not of type ast.IfElseExpression, got %T", exp.Expression)
+	}
+
+	if !testInfixExpression(t, ifExp.Condition, "x", "<", "y") {
+		t.FailNow()
+		return
+	}
+
+	if len(ifExp.Consequence.Statements) != 1 {
+		t.Fatalf("Consequences is not %d statements, got %d statements", 1, len(ifExp.Consequence.Statements))
+	}
+
+	consequence, ok := ifExp.Consequence.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("Statement[0] is not ast.ExpressionStatement, got %T", ifExp.Consequence.Statements[0])
+	}
+
+	if !testLiteralExpression(t, consequence.Expression, "x") {
+		t.FailNow()
+	}
+
+	if ifExp.Alternative != nil {
+		t.Fatalf("Alternative is not nil, got %+v", ifExp.Alternative)
+	}
+}
+
+func TestIfElseStatementParsing(t *testing.T) {
+	input := `if (x<y) {x} else { y }`
+
+	l := lexer.New(input)
+	p := New(l)
+
+	program := p.ParseProgram()
+	checkForParserErrors(t, p)
+	if len(program.Statements) != 1 {
+		t.Fatalf("program does not container %d statements, got %d", 1, len(program.Statements))
+	}
+
+	exp, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("program.Statement is not of type ast.ExpressionStatement, got %T", program.Statements[0])
+	}
+
+	ifExp, ok := exp.Expression.(*ast.IfElseExpression)
+	if !ok {
+		t.Fatalf("exp.Expression is not of type ast.IfElseExpression, got %T", exp.Expression)
+	}
+
+	if !testInfixExpression(t, ifExp.Condition, "x", "<", "y") {
+		t.FailNow()
+		return
+	}
+
+	if len(ifExp.Consequence.Statements) != 1 {
+		t.Fatalf("Consequences is not %d statements, got %d statements", 1, len(ifExp.Consequence.Statements))
+	}
+
+	consequence, ok := ifExp.Consequence.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("Statement[0] is not ast.ExpressionStatement, got %T", ifExp.Consequence.Statements[0])
+	}
+
+	if !testLiteralExpression(t, consequence.Expression, "x") {
+		t.FailNow()
+	}
+
+	if len(ifExp.Alternative.Statements) != 1 {
+		t.Fatalf("Alternative is not %d statements, got %d statements", 1, len(ifExp.Alternative.Statements))
+	}
+
+	alternative, ok := ifExp.Alternative.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("Statement[0] is not ast.ExpressionStatement, got %T", ifExp.Consequence.Statements[0])
+	}
+
+	if !testLiteralExpression(t, alternative.Expression, "y") {
+		t.FailNow()
+	}
+}
+
 func TestLetParser(t *testing.T) {
 	input := `
 	let x = 5;
