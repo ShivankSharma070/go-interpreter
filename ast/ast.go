@@ -2,6 +2,7 @@ package ast
 
 import (
 	"bytes"
+	"strings"
 
 	"github.com/ShivankSharma070/go-interpreter/token"
 )
@@ -187,15 +188,15 @@ func (be *BoolExpression) TokenLiteral() string { return be.Token.Literal }
 func (be *BoolExpression) String() string       { return be.Token.Literal }
 
 type IfElseExpression struct {
-	Token token.Token
-	Condition Expression
+	Token       token.Token
+	Condition   Expression
 	Consequence *BlockStatement
 	Alternative *BlockStatement
 }
 
-func (ie *IfElseExpression) expressionNode() {}
-func (ie *IfElseExpression) TokenLiteral() string {return ie.Token.Literal}
-func (ie *IfElseExpression) String () string {
+func (ie *IfElseExpression) expressionNode()      {}
+func (ie *IfElseExpression) TokenLiteral() string { return ie.Token.Literal }
+func (ie *IfElseExpression) String() string {
 	var buf bytes.Buffer
 	buf.WriteString("if ")
 	buf.WriteString(ie.Condition.String())
@@ -203,26 +204,48 @@ func (ie *IfElseExpression) String () string {
 	buf.WriteString(ie.Consequence.String())
 
 	if ie.Alternative != nil {
-	buf.WriteString("else ")
-	buf.WriteString(ie.Alternative.String())
+		buf.WriteString("else ")
+		buf.WriteString(ie.Alternative.String())
 	}
 
 	return buf.String()
 }
 
 type BlockStatement struct {
-	Token token.Token
+	Token      token.Token
 	Statements []Statement
 }
 
-
-func (be *BlockStatement) statementNode() {}
-func (be *BlockStatement) TokenLiteral() string {return be.Token.Literal}
-func (be *BlockStatement) String() string{
+func (be *BlockStatement) statementNode()       {}
+func (be *BlockStatement) TokenLiteral() string { return be.Token.Literal }
+func (be *BlockStatement) String() string {
 	var buf bytes.Buffer
 	for _, st := range be.Statements {
 		buf.WriteString(st.String())
 	}
 
+	return buf.String()
+}
+
+type FunctionExpression struct {
+	Token      token.Token
+	Parameters []*Identifier
+	Body       *BlockStatement
+}
+
+func (fe *FunctionExpression) expressionNode()      {}
+func (fe *FunctionExpression) TokenLiteral() string { return fe.Token.Literal }
+func (fe *FunctionExpression) String() string {
+	var buf bytes.Buffer
+
+	parameters := []string{}
+	for _, iden := range fe.Parameters {
+		parameters = append(parameters, iden.String())
+	}
+	buf.WriteString(fe.TokenLiteral())
+	buf.WriteString("(")
+	buf.WriteString(strings.Join(parameters, ", "))
+	buf.WriteString(")")
+	buf.WriteString(fe.Body.String())
 	return buf.String()
 }

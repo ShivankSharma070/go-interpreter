@@ -406,6 +406,50 @@ func TestIfElseStatementParsing(t *testing.T) {
 	}
 }
 
+func TestFunctionStatementParsing(t *testing.T) {
+	input := `fn(x, y) {x+y;}`
+
+	l := lexer.New(input)
+	p := New(l)
+
+	program := p.ParseProgram()
+	checkForParserErrors(t, p)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf("Program does not contain %d statements, got %d", 1, len(program.Statements))
+	}
+
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("program.Statement[0] is not ast.ExpressionStatement, got %T", program.Statements[0])
+	}
+
+	exp, ok := stmt.Expression.(*ast.FunctionExpression)
+	if !ok {
+		t.Fatalf("stmt.Expression is not ast.Functionexpression, got %T", stmt.Expression )
+	}
+
+	if len(exp.Parameters)!= 2{
+		t.Fatalf("Function does not container %d prameters, got %d", 2,len(exp.Parameters))
+	}
+
+	if !testLiteralExpression(t,exp.Parameters[0] , "x")  {return }
+	if !testLiteralExpression(t, exp.Parameters[1] ,"y")  {return }
+	 
+	if len(exp.Body.Statements) != 1 {
+		t.Fatalf("exp.Body.Statements does not contain %d statement, got %d",1,len(exp.Body.Statements))
+	}
+	
+	bodyStmt, ok := exp.Body.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("exp.Body.Statements[0] is not ast.ExpressionStatement, got %T", exp.Body.Statements[0])
+	}
+
+	if !testInfixExpression(t, bodyStmt.Expression, "x", "+", "y") {
+		return 
+	}
+}
+
 func TestLetParser(t *testing.T) {
 	input := `
 	let x = 5;

@@ -65,6 +65,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.FALSE, p.parseBooleanExpression)
 	p.registerPrefix(token.LPAREN, p.parseGroupedExpression)
 	p.registerPrefix(token.IF, p.parseIfElseExpression)
+	p.registerPrefix(token.FUNCTION, p.parseFunctionExpression)
 
 	// Infix Functions
 	p.infixParserMap = map[token.TokenType]infixParserFunc{}
@@ -232,8 +233,8 @@ func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 
 	return exp
 }
- 
-func (p *Parser) parseGroupedExpression() ast.Expression{
+
+func (p *Parser) parseGroupedExpression() ast.Expression {
 	p.nextToken()
 
 	exp := p.parseExpression(LOWEST)
@@ -246,7 +247,7 @@ func (p *Parser) parseGroupedExpression() ast.Expression{
 }
 
 func (p *Parser) parseIfElseExpression() ast.Expression {
-	exp := &ast.IfElseExpression{Token:p.currentToken}
+	exp := &ast.IfElseExpression{Token: p.currentToken}
 
 	if !p.expectPeek(token.LPAREN) {
 		return nil
@@ -264,22 +265,64 @@ func (p *Parser) parseIfElseExpression() ast.Expression {
 	}
 
 	exp.Consequence = p.parseBlockExpression()
-	
+
 	if p.isPeekToken(token.ELSE) {
 		p.nextToken()
 
 		if !p.expectPeek(token.LBRACE) {
 			return nil
 		}
-		
+
 		exp.Alternative = p.parseBlockExpression()
 	}
 
 	return exp
 }
- 
+
+func (p *Parser) parseFunctionExpression() ast.Expression {
+	function := &ast.FunctionExpression{Token: p.currentToken}
+
+	if !p.expectPeek(token.LPAREN) {
+		return nil
+	}
+	function.Parameters = p.parseFunctionParameters()
+	if !p.expectPeek(token.LBRACE) {
+		return nil
+	}
+
+	function.Body = p.parseBlockExpression()
+
+	return function
+}
+
+func (p *Parser) parseFunctionParameters() []*ast.Identifier {
+	identifier := []*ast.Identifier{}
+
+	if p.isPeekToken(token.RPAREN) {
+		p.nextToken()
+		return identifier
+	}
+
+	p.nextToken()
+	iden := &ast.Identifier{Token: p.currentToken, Value: p.currentToken.Literal}
+	identifier = append(identifier, iden)
+
+	for p.isPeekToken(token.COMMA) {
+		p.nextToken()
+		p.nextToken()
+		iden := &ast.Identifier{Token: p.currentToken, Value: p.currentToken.Literal}
+		identifier = append(identifier, iden)
+	}
+
+	if !p.expectPeek(token.RPAREN) {
+		return nil
+	}
+
+	return identifier
+}
+
 func (p *Parser) parseBlockExpression() *ast.BlockStatement {
-	blockStmt := &ast.BlockStatement{Token:p.currentToken}
+	blockStmt := &ast.BlockStatement{Token: p.currentToken}
 	blockStmt.Statements = []ast.Statement{}
 
 	p.nextToken()
