@@ -30,6 +30,7 @@ var precedence = map[token.TokenType]int{
 	token.MINUS:   SUM,
 	token.SLASH:   PRODUCT,
 	token.ASTERIK: PRODUCT,
+	token.LPAREN:  CALL,
 }
 
 type Parser struct {
@@ -77,6 +78,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.MINUS, p.parseInfixExpression)
 	p.registerInfix(token.SLASH, p.parseInfixExpression)
 	p.registerInfix(token.ASTERIK, p.parseInfixExpression)
+	p.registerInfix(token.LPAREN, p.parseCallExpression)
 
 	// Read Two tokens so that currentToken and peekToken are set
 	p.nextToken()
@@ -336,6 +338,36 @@ func (p *Parser) parseBlockExpression() *ast.BlockStatement {
 	}
 
 	return blockStmt
+}
+
+func (p *Parser) parseCallExpression(exp ast.Expression) ast.Expression {
+	callExp := &ast.CallExpression{Token: p.currentToken, Function: exp}
+	callExp.Argument = p.parseCallArgument()
+	return callExp
+}
+
+func (p *Parser) parseCallArgument() []ast.Expression {
+	args := []ast.Expression{}
+
+	if p.isPeekToken(token.RPAREN) {
+		p.nextToken()
+		return args
+	}
+
+		p.nextToken()
+	args = append(args, p.parseExpression(LOWEST))
+
+	for p.isPeekToken(token.COMMA) {
+		p.nextToken()
+		p.nextToken()
+		args = append(args, p.parseExpression(LOWEST))
+	}
+
+	if !p.expectPeek(token.RPAREN) {
+		return nil
+	}
+
+	return args
 }
 
 // expectPeek function reads next token only if the next token is what we expect
