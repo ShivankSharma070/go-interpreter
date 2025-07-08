@@ -8,6 +8,7 @@ import (
 	"github.com/ShivankSharma070/go-interpreter/parser"
 )
 
+// ========= INTEGER ============
 func TestEvalIntegerExpression(t *testing.T) {
 	tests := []struct {
 		input    string
@@ -20,14 +21,6 @@ func TestEvalIntegerExpression(t *testing.T) {
 		output := testEval(tt.input)
 		testIntegerObject(t, output, tt.expected)
 	}
-}
-
-func testEval(input string) object.Object {
-	l := lexer.New(input)
-	p := parser.New(l)
-
-	program := p.ParseProgram()
-	return Eval(program)
 }
 
 func testIntegerObject(t *testing.T, obj object.Object, expected int64) bool {
@@ -44,3 +37,42 @@ func testIntegerObject(t *testing.T, obj object.Object, expected int64) bool {
 
 	return true
 }
+
+// ======== BOOLEAN ==========
+func TestEvalBooleanExpresion(t *testing.T) {
+	tests := []struct {
+		input string
+		expected bool
+	} {
+		{"true", true},
+		{"false", false},
+	}
+
+	for _, tt := range tests {
+		output := testEval(tt.input)
+		testBooleanObject(t,output, tt.expected)
+	}
+}
+
+func testBooleanObject(t *testing.T, obj object.Object, expected bool) bool {
+	result, ok := obj.(*object.Boolean)
+	if !ok {
+		t.Fatalf("obj is not of type object.Boolean, got %T", obj)
+		return false
+	}
+
+	if result.Value != expected{
+		t.Fatalf("result.Value is not %t, got %t",expected, result.Value)
+		return false
+	}
+	return true
+}
+
+func testEval(input string) object.Object {
+	l := lexer.New(input)
+	p := parser.New(l)
+
+	program := p.ParseProgram()
+	return Eval(program)
+}
+
