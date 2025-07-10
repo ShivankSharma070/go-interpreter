@@ -68,6 +68,26 @@ func testBooleanObject(t *testing.T, obj object.Object, expected bool) bool {
 	return true
 }
 
+// ========== PREFIX ==========
+func TestBangOperator (t *testing.T) {
+	tests := []struct{
+		input string
+		expected bool
+	} {
+		{"!true", false},
+		{"!false", true},
+		{"!5", false},
+		{"!!true", true},
+		{"!!false", false},
+		{"!!5", true},
+	}
+
+	for _, tt := range tests {
+		output := testEval(tt.input)
+		testBooleanObject(t, output, tt.expected)
+	}
+}
+
 func testEval(input string) object.Object {
 	l := lexer.New(input)
 	p := parser.New(l)
@@ -75,4 +95,3 @@ func testEval(input string) object.Object {
 	program := p.ParseProgram()
 	return Eval(program)
 }
-

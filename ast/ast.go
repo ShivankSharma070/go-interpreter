@@ -251,17 +251,17 @@ func (fe *FunctionExpression) String() string {
 }
 
 type CallExpression struct {
-	Token token.Token
+	Token    token.Token
 	Function Expression
 	Argument []Expression
 }
 
-func (ce *CallExpression) expressionNode() {}
-func (ce *CallExpression) TokenLiteral() string{ return ce.Token.Literal }
+func (ce *CallExpression) expressionNode()      {}
+func (ce *CallExpression) TokenLiteral() string { return ce.Token.Literal }
 func (ce *CallExpression) String() string {
 	var buf bytes.Buffer
 	arguments := []string{}
-	for _, exp := range ce.Argument{
+	for _, exp := range ce.Argument {
 		arguments = append(arguments, exp.String())
 	}
 	buf.WriteString(ce.Function.String())
