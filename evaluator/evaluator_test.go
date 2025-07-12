@@ -112,8 +112,8 @@ func TestBangOperator(t *testing.T) {
 
 // ================ Conditional Expressions ===========
 func TestIfElseExpression(t *testing.T) {
-	tests :=  []struct{
-		input string
+	tests := []struct {
+		input    string
 		expected interface{}
 	}{
 		{"if (true) { 10 }", 10},
@@ -127,21 +127,47 @@ func TestIfElseExpression(t *testing.T) {
 
 	for _, tt := range tests {
 		evaluated := testEval(tt.input)
-		integer, ok := tt.expected.(int) 
+		integer, ok := tt.expected.(int)
 		if ok {
-			testIntegerObject(t,evaluated, int64(integer))
+			testIntegerObject(t, evaluated, int64(integer))
 		} else {
 			testNullObject(t, evaluated)
 		}
 	}
 }
 
-func testNullObject(t *testing.T, obj object.Object) bool{
+func testNullObject(t *testing.T, obj object.Object) bool {
 	if obj != NULL {
 		t.Fatalf("object is not object.NULL, got %T (%+v)", obj, obj)
 		return false
 	}
 	return true
+}
+
+// ================== RETURN ================
+func TestReturnExpression(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected int64
+	}{
+		{"return 10;", 10},
+		{"return 10; 9;", 10},
+		{"return 2 * 5; 9;", 10},
+		{"9; return 2 * 5; 9;", 10},
+		{`
+			if (10 > 1) {
+				if (10 > 1) {
+					return 10
+				}
+				return 1
+			}
+			`, 10},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+		testIntegerObject(t, evaluated, tt.expected)
+	}
 }
 
 func testEval(input string) object.Object {
