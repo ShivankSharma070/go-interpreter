@@ -1,7 +1,11 @@
 package object
 
 import (
+	"bytes"
 	"fmt"
+	"strings"
+
+	"github.com/ShivankSharma070/go-interpreter/ast"
 )
 
 const (
@@ -10,6 +14,7 @@ const (
 	RETURN_VALUE_OBJ = "RETURN_VALUE"
 	NULL_OBJ         = "NULL"
 	ERROR_OBJ        = "ERROR"
+	FUNCTION_OBJ     = "FUNCTION_OBj"
 )
 
 type ObjectType string
@@ -63,12 +68,37 @@ func NewEnvironment() *Environment {
 	return &Environment{Store: s}
 }
 
-func (e *Environment) Get (name string) (Object, bool) {
+func (e *Environment) Get(name string) (Object, bool) {
 	value, ok := e.Store[name]
 	return value, ok
 }
 
-func (e *Environment) Set(name string, value Object) Object{
+func (e *Environment) Set(name string, value Object) Object {
 	e.Store[name] = value
 	return value
+}
+
+type FunctionLiteral struct {
+	Parameters []*ast.Identifier
+	Body       *ast.BlockStatement
+	Env        Environment
+}
+
+func (fe *FunctionLiteral) Inspect() string {
+	var result bytes.Buffer
+	params := []string{}
+	for _, f := range fe.Parameters {
+		params = append(params, f.String())
+	}
+
+	result.WriteString("fn (")
+	result.WriteString(strings.Join(params, ", "))
+	result.WriteString(") {\n")
+	result.WriteString(fe.Body.String())
+	result.WriteString("\n}")
+	return result.String()
+}
+
+func (fe *FunctionLiteral) Type() ObjectType {
+	return FUNCTION_OBJ
 }

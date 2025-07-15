@@ -186,6 +186,29 @@ func TestLetStatements(t *testing.T) {
 	}
 }
 
+func TestFunctionExpression(t *testing.T ) {
+	input := ` fn (x) {x+2;}; `
+	evaluated := testEval(input)
+	fn, ok := evaluated.(*object.FunctionLiteral)
+	if  !ok {
+		t.Errorf("Evaluated value is not of type object.FunctionLiteral, got %T(%+v)", evaluated, evaluated)
+	}
+
+	if len(fn.Parameters) != 1 {
+		t.Errorf("Not enough parameters, expected %d, got %d",1, len(fn.Parameters))
+	}
+
+	if fn.Parameters[0].String() != "x" {
+		t.Errorf("parameter value is not %s, got %s", "x", fn.Parameters[0].String())
+	}
+
+	expectedBody := "(x + 2)"
+	if fn.Body.String() != expectedBody {
+		t.Errorf("body vaulue is not %s, got %s", expectedBody,fn.Body.String())
+	}
+}
+
+
 // =============== Errors ====================
 func TestErrors(t *testing.T) {
 	tests := []struct {
