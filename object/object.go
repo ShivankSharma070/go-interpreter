@@ -59,29 +59,10 @@ type Error struct {
 func (e *Error) Inspect() string  { return "Error: " + e.Message }
 func (e *Error) Type() ObjectType { return ERROR_OBJ }
 
-type Environment struct {
-	Store map[string]Object
-}
-
-func NewEnvironment() *Environment {
-	s := make(map[string]Object)
-	return &Environment{Store: s}
-}
-
-func (e *Environment) Get(name string) (Object, bool) {
-	value, ok := e.Store[name]
-	return value, ok
-}
-
-func (e *Environment) Set(name string, value Object) Object {
-	e.Store[name] = value
-	return value
-}
-
 type FunctionLiteral struct {
 	Parameters []*ast.Identifier
 	Body       *ast.BlockStatement
-	Env        Environment
+	Env        *Environment
 }
 
 func (fe *FunctionLiteral) Inspect() string {
@@ -102,3 +83,34 @@ func (fe *FunctionLiteral) Inspect() string {
 func (fe *FunctionLiteral) Type() ObjectType {
 	return FUNCTION_OBJ
 }
+
+// ============ ENVIRONMENT ==============
+type Environment struct {
+	Store map[string]Object
+	Outer *Environment
+}
+
+func NewEnclosingEnvironment(enclosingEnv *Environment) *Environment{
+	env := NewEnvironment()
+	env.Outer = enclosingEnv
+	return env
+}
+
+func NewEnvironment() *Environment {
+	s := make(map[string]Object)
+	return &Environment{Store: s, Outer: nil }
+}
+
+func (e *Environment) Get(name string) (Object, bool) {
+	value, ok := e.Store[name]
+	if !ok && e.Outer != nil {
+		value, ok = e.Outer.Get(name)
+	}
+	return value, ok
+}
+
+func (e *Environment) Set(name string, value Object) Object {
+	e.Store[name] = value
+	return value
+}
+

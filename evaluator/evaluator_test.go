@@ -114,7 +114,7 @@ func TestBangOperator(t *testing.T) {
 func TestIfElseExpression(t *testing.T) {
 	tests := []struct {
 		input    string
-		expected interface{}
+		expected any
 	}{
 		{"if (true) { 10 }", 10},
 		{"if (false) { 10 }", nil},
@@ -169,12 +169,13 @@ func TestReturnExpression(t *testing.T) {
 		testIntegerObject(t, evaluated, tt.expected)
 	}
 }
+
 // =============== Let Statements ====================
 func TestLetStatements(t *testing.T) {
 	tests := []struct {
-		input string
+		input    string
 		expected int64
-	} {
+	}{
 		{"let a = 5; a;", 5},
 		{"let a = 5 * 5; a;", 25},
 		{"let a = 5; let b = a; b;", 5},
@@ -182,20 +183,21 @@ func TestLetStatements(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		testIntegerObject(t, testEval(tt.input),tt.expected)
+		testIntegerObject(t, testEval(tt.input), tt.expected)
 	}
 }
 
-func TestFunctionExpression(t *testing.T ) {
+// ==================== FUNCTION ==================
+func TestFunctionExpression(t *testing.T) {
 	input := ` fn (x) {x+2;}; `
 	evaluated := testEval(input)
 	fn, ok := evaluated.(*object.FunctionLiteral)
-	if  !ok {
+	if !ok {
 		t.Errorf("Evaluated value is not of type object.FunctionLiteral, got %T(%+v)", evaluated, evaluated)
 	}
 
 	if len(fn.Parameters) != 1 {
-		t.Errorf("Not enough parameters, expected %d, got %d",1, len(fn.Parameters))
+		t.Errorf("Not enough parameters, expected %d, got %d", 1, len(fn.Parameters))
 	}
 
 	if fn.Parameters[0].String() != "x" {
@@ -204,15 +206,45 @@ func TestFunctionExpression(t *testing.T ) {
 
 	expectedBody := "(x + 2)"
 	if fn.Body.String() != expectedBody {
-		t.Errorf("body vaulue is not %s, got %s", expectedBody,fn.Body.String())
+		t.Errorf("body vaulue is not %s, got %s", expectedBody, fn.Body.String())
 	}
 }
 
+func TestFunctionApplication(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected int64
+	}{
+		{"let identity = fn(x) { x; }; identity(5);", 5},
+		{"let identity = fn(x) { return x; }; identity(5);", 5},
+		{"let double = fn(x) { x * 2; }; double(5);", 10},
+		{"let add = fn(x, y) { x + y; }; add(5, 5);", 10},
+		{"let add = fn(x, y) { x + y; }; add(5 + 5, add(5, 5));", 20},
+		{"fn(x) { x; }(5)", 5},
+	}
+	
+	for _, tt := range tests {
+		testIntegerObject(t, testEval(tt.input),tt.expected)
+	}
+}
+
+func TestClousers(t *testing.T) {
+	input := `
+	let adder = fn(x) {
+	fn(y) { x+y; }
+	}
+
+	let newAdder = adder(2)
+	newAdder(2)
+	` 
+
+	testIntegerObject(t, testEval(input), 4)
+}
 
 // =============== Errors ====================
 func TestErrors(t *testing.T) {
 	tests := []struct {
-		input            string
+		input           string
 		expectedMessage string
 	}{
 		{
@@ -262,8 +294,8 @@ return 1;
 			continue
 		}
 
-		if errorObj.Message != tt.expectedMessage{
-			t.Errorf("ErrorObj.Message is not %s, got %s", tt.expectedMessage,errorObj.Message)
+		if errorObj.Message != tt.expectedMessage {
+			t.Errorf("ErrorObj.Message is not %s, got %s", tt.expectedMessage, errorObj.Message)
 		}
 	}
 
