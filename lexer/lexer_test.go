@@ -26,6 +26,8 @@ func TestLexer(t *testing.T) {
 
 	==
 	!=
+	"foobar"
+	"foo bar"
 	`
 
 	test := []struct {
@@ -95,6 +97,8 @@ func TestLexer(t *testing.T) {
 		{token.RBRACE, "}"},
 		{token.EQ, "=="},
 		{token.NOT_EQ, "!="},
+		{token.STRING, "foobar"},
+		{token.STRING, "foo bar"},
 		{token.EOF, ""},
 	}
 

@@ -73,6 +73,9 @@ func (l *Lexer) NextToken() token.Token {
 		tok = token.NewToken(token.SEMICOLON, l.ch)
 	case ',':
 		tok = token.NewToken(token.COMMA, l.ch)
+	case '"':
+	tok.Type = token.STRING
+		tok.Literal = l.readString()
 	case '(':
 		tok = token.NewToken(token.LPAREN, l.ch)
 	case ')':
@@ -111,6 +114,20 @@ func (l *Lexer) readIdenOrLiteral(validate func(byte) bool) string {
 		l.ReadChar()
 	}
 	return l.input[position:l.position]
+}
+
+// Function to read a string (can contain anything but should be enclosed within "" )
+func (l *Lexer) readString() string {
+	position := l.position + 1
+	for {
+		l.ReadChar()
+
+		if l.ch == '"' || l.ch == 0{
+			break
+		}
+	}
+
+	return l.input[position: l.position]
 }
 
 // Eat up all the whitespaces, newline, tab characters

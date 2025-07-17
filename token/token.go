@@ -9,6 +9,7 @@ const (
 	// Identifier and Literals
 	IDEN = "IDEN" // Variable names
 	INT  = "INT"
+	STRING = "STRING"
 
 	// Operators
 	ASSIGN  = "="
