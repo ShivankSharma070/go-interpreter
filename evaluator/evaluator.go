@@ -20,6 +20,8 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return Eval(node.Expression, env)
 	case *ast.IntegerLiteral:
 		return &object.Integer{Value: node.Value}
+	case *ast.StringLiteral: 
+		return &object.String{Value: node.Value}
 	case *ast.BoolExpression:
 		// Creating a new object for every true and fasle is pointless, as there is no difference between two true or false.
 		// return &object.Boolean{Value: node.Value}

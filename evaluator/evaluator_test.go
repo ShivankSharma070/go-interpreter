@@ -187,6 +187,20 @@ func TestLetStatements(t *testing.T) {
 	}
 }
 
+// ==================== STRING ==================
+func TestStringLiteral(t *testing.T) {
+	input := `"hello world";`
+	evaluated := testEval(input)
+	str, ok := evaluated.(*object.String)
+	if !ok {
+		t.Errorf("evaluated object is not of type object.String, got %T", evaluated)
+	}
+
+	if str.Value != "hello world" {
+		t.Errorf("str.value is not %q, got %q", "hello world", str.Value)
+	}
+}
+
 // ==================== FUNCTION ==================
 func TestFunctionExpression(t *testing.T) {
 	input := ` fn (x) {x+2;}; `
@@ -222,9 +236,9 @@ func TestFunctionApplication(t *testing.T) {
 		{"let add = fn(x, y) { x + y; }; add(5 + 5, add(5, 5));", 20},
 		{"fn(x) { x; }(5)", 5},
 	}
-	
+
 	for _, tt := range tests {
-		testIntegerObject(t, testEval(tt.input),tt.expected)
+		testIntegerObject(t, testEval(tt.input), tt.expected)
 	}
 }
 
@@ -236,7 +250,7 @@ func TestClousers(t *testing.T) {
 
 	let newAdder = adder(2)
 	newAdder(2)
-	` 
+	`
 
 	testIntegerObject(t, testEval(input), 4)
 }
