@@ -201,6 +201,19 @@ func TestStringLiteral(t *testing.T) {
 	}
 }
 
+func TestStringConcatenation(t *testing.T) {
+	input := `"hello"+"world"`
+	evaluated := testEval(input)
+	str, ok := evaluated.(*object.String)
+	if !ok {
+		t.Fatalf("evaluated object is not of type object.String, got %T", evaluated)
+	}
+
+	if str.Value != "helloworld" {
+		t.Errorf("str.value is not %q, got %q", "hello world", str.Value)
+	}
+}
+
 // ==================== FUNCTION ==================
 func TestFunctionExpression(t *testing.T) {
 	input := ` fn (x) {x+2;}; `
@@ -284,6 +297,10 @@ func TestErrors(t *testing.T) {
 		{
 			"if (10 > 1) { true + false; }",
 			"unknown operator: BOOLEAN + BOOLEAN",
+		},
+		{
+			`"hello" - "world"`,
+			"unknown operator: STRING - STRING",
 		},
 		{
 			`
