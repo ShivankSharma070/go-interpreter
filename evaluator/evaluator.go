@@ -20,7 +20,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return Eval(node.Expression, env)
 	case *ast.IntegerLiteral:
 		return &object.Integer{Value: node.Value}
-	case *ast.StringLiteral: 
+	case *ast.StringLiteral:
 		return &object.String{Value: node.Value}
 	case *ast.BoolExpression:
 		// Creating a new object for every true and fasle is pointless, as there is no difference between two true or false.
@@ -92,18 +92,22 @@ func evalExpressions(args []ast.Expression, env *object.Environment) []object.Ob
 }
 
 func applyFunction(fn object.Object, args []object.Object) object.Object {
-	function, ok := fn.(*object.FunctionLiteral)
-	if !ok {
-		return newError("not a function: %s", fn.Type())
+	switch fn := fn.(type) {
+	case *object.FunctionLiteral: 
+		extendedEnv := extendFunctionEnv(fn, args)
+		evaluated := Eval(fn.Body, extendedEnv)
+		return unwrapReturnValue(evaluated)
+	case *object.Builtin:
+	return fn.Fn(args...)
+	default : 
+		return newError("not a function: %s",fn.Type())
 	}
-	extendedEnv := extendFunctionEnv(function, args)
-	evaluated := Eval(function.Body, extendedEnv)
-	return unwrapReturnValue(evaluated)
+
 }
 
 func extendFunctionEnv(fn *object.FunctionLiteral, args []object.Object) *object.Environment {
 	env := object.NewEnclosingEnvironment(fn.Env)
-	for paramIdx, name :=  range fn.Parameters {
+	for paramIdx, name := range fn.Parameters {
 		env.Set(name.Value, args[paramIdx])
 	}
 	return env
@@ -117,12 +121,15 @@ func unwrapReturnValue(obj object.Object) object.Object {
 }
 
 func evalIdentifier(node *ast.Identifier, env *object.Environment) object.Object {
-	val, ok := env.Get(node.Value)
-	if !ok {
-		return newError("identifier not found: %s", node.Value)
+	if val, ok := env.Get(node.Value); ok {
+		return val
 	}
 
-	return val
+	if builtin, ok := builtins[node.Value]; ok {
+		return builtin
+	}
+
+	return newError("identifier not found: %s", node.Value)
 }
 
 func evalIfExpression(node *ast.IfElseExpression, env *object.Environment) object.Object {
@@ -195,9 +202,9 @@ func evalStringInfixExpression(operator string, right, left object.Object) objec
 	leftValue := left.(*object.String).Value
 	rightValue := right.(*object.String).Value
 	switch operator {
-	case "+" :
-		return &object.String{Value : leftValue + rightValue}
-	default : 
+	case "+":
+		return &object.String{Value: leftValue + rightValue}
+	default:
 		return newError("unknown operator: %s %s %s", left.Type(), operator, right.Type())
 	}
 }

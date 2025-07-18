@@ -16,6 +16,7 @@ const (
 	ERROR_OBJ        = "ERROR"
 	FUNCTION_OBJ     = "FUNCTION"
 	STRING_OBJ = "STRING"
+	BUILTIN_OBJ = "BUILTIN"
 )
 
 type ObjectType string
@@ -122,3 +123,13 @@ func (e *Environment) Set(name string, value Object) Object {
 	return value
 }
 
+// ================== BUILT-IN FUNCTION ===================
+
+type BuiltInFunction func(args ...Object) Object
+
+type Builtin struct {
+	Fn BuiltInFunction
+}
+
+func (bu *Builtin) Inspect() string{return "builtin function"}
+func (bu *Builtin) Type() ObjectType { return BUILTIN_OBJ}

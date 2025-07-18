@@ -269,6 +269,39 @@ func TestClousers(t *testing.T) {
 }
 
 // =============== Errors ====================
+func TestBuiltInFunction(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected any
+	}{
+		{`len("")`, 0},
+		{`len("four")`, 4},
+		{`len("hello world")`, 11},
+		{`len(1)`, "argument to `len` not supported, got INTEGER"},
+		{`len("one", "two")`, "wrong number of arguments. got=2, want=1"},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+		switch expected := tt.expected.(type) {
+		case int:
+			testIntegerObject(t, evaluated, int64(expected))
+		case string:
+			err, ok := evaluated.(*object.Error)
+			if !ok {
+				t.Errorf("evaluated object is not error, got %T", evaluated)
+				continue
+			}
+
+		if err.Message != expected {
+				t.Errorf("Error message is not %q, got %q", expected, err.Message)
+			}
+		}
+	}
+
+}
+
+// =============== Errors ====================
 func TestErrors(t *testing.T) {
 	tests := []struct {
 		input           string
