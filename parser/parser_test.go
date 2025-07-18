@@ -640,6 +640,27 @@ func TestLetParser(t *testing.T) {
 	}
 }
 
+func TestParsingArrayLiterals(t *testing.T) {
+	input := "[1, 2*3, 4+5]"
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkForParserErrors(t, p)
+
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	array, ok := stmt.Expression.(*ast.ArrayLiteral)
+	if !ok {
+		t.Fatalf("exp not ast.ArrayLiteral. got=%T", stmt.Expression)
+	}
+
+	if len(array.Elements) != 3 {
+		t.Fatalf("len(array.Elements) not 3. got=%d", len(array.Elements))
+	}
+	testIntegerLiteral(t, array.Elements[0], 1)
+	testInfixExpression(t,array.Elements[1], 2, "*", 3)
+	testInfixExpression(t,array.Elements[2], 4, "+", 5)
+}
+
 // ========== HELPER FUNCTIONS ================
 
 func testIdentifier(t *testing.T, expStmt ast.Expression, value string) bool {

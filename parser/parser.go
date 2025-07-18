@@ -68,6 +68,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.IF, p.parseIfElseExpression)
 	p.registerPrefix(token.FUNCTION, p.parseFunctionExpression)
 	p.registerPrefix(token.STRING, p.parseStringLiteral)
+	p.registerPrefix(token.LBRACKET, p.parseArrayLiteral)
 
 	// Infix Functions
 	p.infixParserMap = map[token.TokenType]infixParserFunc{}
@@ -380,6 +381,35 @@ func (p *Parser) parseCallArgument() []ast.Expression {
 	}
 
 	return args
+}
+
+func (p *Parser) parseArrayLiteral() ast.Expression{
+	array := &ast.ArrayLiteral{Token: p.currentToken}
+	array.Elements = p.parseExpressionList(token.RBRACKET)
+	return array
+}
+
+func (p *Parser) parseExpressionList(end token.TokenType) []ast.Expression {
+	list := []ast.Expression{}
+
+	if p.isPeekToken(end) {
+		p.nextToken()
+		return list
+	}
+	p.nextToken()
+	list = append(list, p.parseExpression(LOWEST))
+
+	for p.isPeekToken(token.COMMA){
+		p.nextToken()
+		p.nextToken()
+		list = append(list, p.parseExpression(LOWEST))
+	}
+
+	if !p.expectPeek(end){
+		return nil
+	} 
+
+	return list
 }
 
 // expectPeek function reads next token only if the next token is what we expect
