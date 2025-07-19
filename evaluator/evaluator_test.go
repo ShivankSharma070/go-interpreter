@@ -268,6 +268,20 @@ func TestClousers(t *testing.T) {
 	testIntegerObject(t, testEval(input), 4)
 }
 
+// =============== ARRAY ====================
+func TestArrayLiteral(t *testing.T) {
+	input := "[1, 2*2, 3+3]";
+	evaluated := testEval(input)
+
+	result, ok := evaluated.(*object.Array)
+	if !ok {
+		t.Errorf("Evaluated object is not of type object.Array, got %T", evaluated)
+	}
+	testIntegerObject(t, result.Elements[0], 1)
+	testIntegerObject(t, result.Elements[1], 4)
+	testIntegerObject(t, result.Elements[2], 6)
+}
+
 // =============== Errors ====================
 func TestBuiltInFunction(t *testing.T) {
 	tests := []struct {

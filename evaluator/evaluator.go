@@ -74,6 +74,13 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 			return args[0]
 		}
 		return applyFunction(function, args)
+	case *ast.ArrayLiteral:
+		elements := evalExpressions(node.Elements, env)
+		if len(elements) == 1 && isError(elements[0]) {
+			return elements[0]
+		}
+
+		return &object.Array{Elements : elements}
 	}
 	return nil
 }
@@ -93,14 +100,14 @@ func evalExpressions(args []ast.Expression, env *object.Environment) []object.Ob
 
 func applyFunction(fn object.Object, args []object.Object) object.Object {
 	switch fn := fn.(type) {
-	case *object.FunctionLiteral: 
+	case *object.FunctionLiteral:
 		extendedEnv := extendFunctionEnv(fn, args)
 		evaluated := Eval(fn.Body, extendedEnv)
 		return unwrapReturnValue(evaluated)
 	case *object.Builtin:
-	return fn.Fn(args...)
-	default : 
-		return newError("not a function: %s",fn.Type())
+		return fn.Fn(args...)
+	default:
+		return newError("not a function: %s", fn.Type())
 	}
 
 }
