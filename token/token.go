@@ -26,6 +26,7 @@ const (
 
 	//Delimeters
 	SEMICOLON = ";"
+	COLON = ":"
 	COMMA     = ","
 
 	// Braces

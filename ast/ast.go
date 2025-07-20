@@ -97,7 +97,7 @@ type StringLiteral struct {
 	Value string
 }
 
-func (sl *StringLiteral) expressionNode() {}
+func (sl *StringLiteral) expressionNode()      {}
 func (sl *StringLiteral) String() string       { return sl.Token.Literal }
 func (sl *StringLiteral) TokenLiteral() string { return sl.Token.Literal }
 
@@ -282,16 +282,17 @@ func (ce *CallExpression) String() string {
 }
 
 type ArrayLiteral struct {
-	Token token.Token
+	Token    token.Token
 	Elements []Expression
 }
-func (al *ArrayLiteral) expressionNode(){}
-func (al *ArrayLiteral) TokenLiteral() string {return al.Token.Literal}
+
+func (al *ArrayLiteral) expressionNode()      {}
+func (al *ArrayLiteral) TokenLiteral() string { return al.Token.Literal }
 func (al *ArrayLiteral) String() string {
 	var out bytes.Buffer
 
 	elements := []string{}
-	for _, el := range al.Elements{
+	for _, el := range al.Elements {
 		elements = append(elements, el.String())
 	}
 	out.WriteString("[")
@@ -303,13 +304,13 @@ func (al *ArrayLiteral) String() string {
 
 type IndexExpression struct {
 	Token token.Token
-	Left Expression
+	Left  Expression
 	Index Expression
 }
 
-func (ie *IndexExpression) expressionNode() {}
-func (ie *IndexExpression) TokenLiteral() string{ return ie.Token.Literal }
-func (ie *IndexExpression) String()string {
+func (ie *IndexExpression) expressionNode()      {}
+func (ie *IndexExpression) TokenLiteral() string { return ie.Token.Literal }
+func (ie *IndexExpression) String() string {
 	var out bytes.Buffer
 	out.WriteString("(")
 	out.WriteString(ie.Left.String())
@@ -318,5 +319,24 @@ func (ie *IndexExpression) String()string {
 	out.WriteString("])")
 
 	return out.String()
+}
 
+type HashLiteral struct {
+	Token token.Token
+	Pairs map[Expression]Expression
+}
+
+func (hl *HashLiteral) expressionNode()      {}
+func (hl *HashLiteral) TokenLiteral() string { return hl.Token.Literal }
+func (hl *HashLiteral) String() string {
+	var out bytes.Buffer
+	pairs := []string{}
+	for key, value := range hl.Pairs {
+		pairs = append(pairs, key.String()+":"+value.String())
+	}
+
+	out.WriteString("{")
+	out.WriteString(strings.Join(pairs, ", "))
+	out.WriteString("}")
+	return out.String()
 }

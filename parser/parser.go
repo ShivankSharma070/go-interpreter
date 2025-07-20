@@ -71,6 +71,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.FUNCTION, p.parseFunctionExpression)
 	p.registerPrefix(token.STRING, p.parseStringLiteral)
 	p.registerPrefix(token.LBRACKET, p.parseArrayLiteral)
+	p.registerPrefix(token.LBRACE, p.parseHashLiteral)
 
 	// Infix Functions
 	p.infixParserMap = map[token.TokenType]infixParserFunc{}
@@ -407,6 +408,32 @@ func (p *Parser) parseIndexExpression(left ast.Expression) ast.Expression{
 	}
 
 	return exp
+}
+
+func (p *Parser) parseHashLiteral() ast.Expression{
+	hash := &ast.HashLiteral{Token : p.currentToken}
+	hash.Pairs = make(map[ast.Expression]ast.Expression)
+
+	for !p.isPeekToken(token.RBRACE){
+		p.nextToken()
+		key := p.parseExpression(LOWEST)
+		if !p.expectPeek(token.COLON) {
+			return nil
+		}
+		p.nextToken()
+		value := p.parseExpression(LOWEST)
+
+		hash.Pairs[key] = value
+
+		if !p.isPeekToken(token.RBRACE) && !p.expectPeek(token.COMMA){
+			return nil
+		}
+	}
+
+	if !p.expectPeek(token.RBRACE) {
+		return nil
+	}
+	return hash
 }
 
 // expectPeek function reads next token only if the next token is what we expect
