@@ -3,6 +3,7 @@ package evaluator
 import (
 	"github.com/ShivankSharma070/go-interpreter/object"
 	"os"
+	"fmt"
 )
 
 var builtins = map[string]*object.Builtin{
@@ -81,7 +82,7 @@ var builtins = map[string]*object.Builtin{
 			return NULL
 		},
 	},
-	
+
 	"push": {
 		Fn: func(args ...object.Object) object.Object {
 			if len(args) != 2 {
@@ -96,7 +97,16 @@ var builtins = map[string]*object.Builtin{
 			copy(elements, arr.Elements)
 			elements[length] = args[1]
 
-			return &object.Array{Elements : elements}
+			return &object.Array{Elements: elements}
+		},
+	},
+	"puts": {
+		Fn: func(args ...object.Object) object.Object {
+			for _, arg := range args {
+				fmt.Println(arg.Inspect())
+			}
+
+			return NULL
 		},
 	},
 }
